@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,url_for
 from jsonData import read_file, write_file
 from os import path
 
 app = Flask(__name__)
+app.config['SERVER_NAME'] = 'localhost:5000'
 
 if path.exists('items.json') != True:
     with open('items.json','w') as file_istance:
@@ -29,13 +30,13 @@ def test_rw():
     write_file('items.json',items)
     return items
 
-@app.route('/items/',methods=['GET'])
+@app.route('/api/items/',methods=['GET'])
 def getItems():
     items = read_file('items.json')
     return jsonify({'message':'items in stock',
                     'items': items})
 
-@app.route('/items/<string:name_item>/',methods=['GET'])
+@app.route('/api/items/<string:name_item>/',methods=['GET'])
 def getItem(name_item):
     items = read_file('items.json')
     item_founded = items.keys()
@@ -46,7 +47,7 @@ def getItem(name_item):
                         'item': items[item_founded[0]]})
     return jsonify({'message':'item not founded'})
 
-@app.route('/items/',methods=['POST'])
+@app.route('/api/items/',methods=['POST'])
 def addItem():
     items = read_file('items.json')
     key = key_(items)
@@ -55,12 +56,13 @@ def addItem():
     item = {
         'name':request.json['name'],
         'description':request.json['description'],
-        'group':request.json['group']}
+        'group':request.json['group'],
+        'url':url_for("getItem",name_item=request.json['name'])}
     items[key].append(item)
     write_file('items.json',items)
     return jsonify({'message':'Item added'})
 
-@app.route('/items/<string:name_item>/',methods=['PUT'])
+@app.route('/api/items/<string:name_item>/',methods=['PUT'])
 def editItem(name_item):
     items = read_file('items.json')
 
@@ -76,7 +78,7 @@ def editItem(name_item):
                             'items': items})
     return jsonify({'message':'item not founded'})
 
-@app.route('/items/<string:name_item>/',methods=['DELETE'])
+@app.route('/api/items/<string:name_item>/',methods=['DELETE'])
 def deleteItem(name_item):
     items = read_file('items.json')
     item_keys = items.keys()
